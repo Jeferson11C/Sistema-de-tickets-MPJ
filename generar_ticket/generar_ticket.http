@@ -1,0 +1,6 @@
+@generar_ticket_HostAddress = http://localhost:5160
+
+GET {{generar_ticket_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
