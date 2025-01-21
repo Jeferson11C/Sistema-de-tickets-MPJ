@@ -1,34 +1,40 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using generar_ticket.ticket.Domain.Model.Aggregates;
 using generar_ticket.ticket.Domain.Model.Queries;
-using generar_ticket.ticket.Domain.Repositories;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using generar_ticket.ticket.Domain.Services;
 
-namespace generar_ticket.ticket.Application.Services
+namespace generar_ticket.ticket.Domain.Services
 {
     public class TicketQueryService : ITicketQueryService
     {
-        private readonly ITicketRepository _ticketRepository;
+        private readonly List<Ticket> _tickets;
 
-        public TicketQueryService(ITicketRepository ticketRepository)
+        public TicketQueryService()
         {
-            _ticketRepository = ticketRepository;
+            _tickets = new List<Ticket>();
         }
 
-        public async Task<Ticket?> Handle(GetTicketByIdQuery query)
+        public Task<IEnumerable<Ticket>> Handle(GetAllTicketsQuery query)
         {
-            return await _ticketRepository.GetTicketByIdAsync(query);
+            return Task.FromResult(_tickets.AsEnumerable());
         }
 
-        public async Task<Ticket?> Handle(GetTicketByNumberQuery query)
+        public Task<IEnumerable<Ticket>> Handle(GetTicketsByAreaQuery query)
         {
-            return await _ticketRepository.GetTicketByNumberAsync(query);
+            var tickets = _tickets.Where(t => t.AreaNombre == query.AreaNombre);
+            return Task.FromResult(tickets.AsEnumerable());
         }
 
-        public async Task<IEnumerable<Ticket>> Handle(GetAllTicketQuery query)
+        public Task<Ticket> Handle(GetTicketByNumberQuery query)
         {
-            return await _ticketRepository.ListAsync();
+            var ticket = _tickets.FirstOrDefault(t => t.NumeroTicket == query.NumeroTicket);
+            return Task.FromResult(ticket);
+        }
+
+        public void AddTicket(Ticket ticket)
+        {
+            _tickets.Add(ticket);
         }
     }
 }

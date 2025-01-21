@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
 using generar_ticket.ticket.Domain.Model.Aggregates;
+using generar_ticket.ticket.Domain.Model.Commands;
+using generar_ticket.ticket.Domain.Services;
 using generar_ticket.ticket.Interfaces.REST.Resources;
 using generar_ticket.ticket.Interfaces.REST.Transform;
-using Microsoft.AspNetCore.Mvc;
 
 namespace generar_ticket.ticket.Interfaces.REST
 {
@@ -9,39 +11,33 @@ namespace generar_ticket.ticket.Interfaces.REST
     [Route("api/[controller]")]
     public class TicketController : ControllerBase
     {
-        [HttpPost]
-        public IActionResult CreateTicket([FromBody] CreatedTicketResource createdTicketResource)
+        private readonly PersonaService _personaService;
+
+        public TicketController(PersonaService personaService)
         {
-            var createTicketCommand = CreateTicketCommandFromResourceAssembler.ToCommandFromResource(createdTicketResource);
-            // Logic to handle the creation of the ticket using createTicketCommand
-            // For example, calling a service to handle the command
-            return CreatedAtAction(nameof(GetTicketById), new { id = createTicketCommand.TicketNumber }, createTicketCommand);
+            _personaService = personaService;
         }
 
-        [HttpPut("{id}")]
-        public IActionResult UpdateTicket(int id, [FromBody] UpdatedTicketResource updatedTicketResource)
+        [HttpPost]
+        public ActionResult<TicketResource> CreateTicket([FromBody] CreateTicketCommand command)
         {
-            if (id != updatedTicketResource.Id)
+            var persona = _personaService.GetPersonaData(command.Documento).Result;
+            if (persona == null)
             {
-                return BadRequest();
+                return NotFound(new { Message = "Persona data not found" });
             }
 
-            var updateTicketCommand = UpdateTicketCommandFromResourceAssembler.ToCommandFromResource(updatedTicketResource);
-            // Logic to handle the update of the ticket using updateTicketCommand
-            // For example, calling a service to handle the command
-            return NoContent();
+            var ticket = new Ticket(command, _personaService);
+            var ticketResource = TicketResourceFromEntityAssembler.ToResourceFromEntity(ticket);
+            return CreatedAtAction(nameof(GetTicketById), new { id = ticket.Id }, ticketResource);
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetTicketById(int id)
+        public ActionResult<TicketResource> GetTicketById(int id)
         {
-            // Logic to retrieve the ticket by id
-            // For example, calling a service to get the ticket
-            Ticket ticket = null; // Replace with actual retrieval logic
-            if (ticket == null)
-            {
-                return NotFound();
-            }
+            // Simulate getting a ticket by ID
+            var command = new CreateTicketCommand("12345678", "Example Area");
+            var ticket = new Ticket(command, _personaService);
 
             var ticketResource = TicketResourceFromEntityAssembler.ToResourceFromEntity(ticket);
             return Ok(ticketResource);

@@ -9,13 +9,15 @@ namespace generar_ticket.ticket.Interfaces.REST.Transform
         {
             return new TicketResource(
                 entity.Id,
-                entity.TicketNumber,
-                entity.UserName,
-                entity.Status,
-                entity.CreatedDate,
-                entity.UpdatedDate
+                entity.NumeroTicket,
+                entity.AreaNombre, // Usar la propiedad AreaNombre
+                entity.Fecha,
+                entity.Documento,
+                entity.Nombres,
+                entity.ApePaterno,
+                entity.ApeMaterno,
+                entity.Estado
             );
         }
-        
     }
 }

@@ -1,3 +1,4 @@
-namespace generar_ticket.ticket.Domain.Model.Queries;
-
-public record GetAllTicketQuery();
+namespace generar_ticket.ticket.Domain.Model.Queries
+{
+    public record GetAllTicketsQuery();
+}

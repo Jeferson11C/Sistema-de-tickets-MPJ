@@ -1,13 +1,18 @@
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using generar_ticket.Shared.Interfaces.ASP.Configuration;
-using generar_ticket.ticket.Application.Services;
-using generar_ticket.ticket.Domain.Repositories;
+using generar_ticket.area.Interfaces.REST.Transform;
 using generar_ticket.ticket.Domain.Services;
-using generar_ticket.ticket.Infrastructure.Persistence.EFC.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Set the HTTPS port
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5000); // HTTP port
+    options.ListenAnyIP(5001, listenOptions => listenOptions.UseHttps()); // HTTPS port
+});
 
 // Add services to the container.
 builder.Services.AddControllers(options => options.Conventions.Add(new KebabCaseRouteNamingConvention()));
@@ -33,7 +38,7 @@ builder.Services.AddDbContext<AppDbContext>(
             else if (builder.Environment.IsProduction())
                 options.UseMySQL(connectionString)
                     .LogTo(Console.WriteLine, LogLevel.Error)
-                    .EnableDetailedErrors();    
+                    .EnableDetailedErrors();
     });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -98,10 +103,15 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
-// Configure Dependency Injection
-builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-builder.Services.AddScoped<ITicketCommandService, TicketCommandService>();
-builder.Services.AddScoped<ITicketQueryService, TicketQueryService>();
+// Register Area transformation services
+builder.Services.AddScoped<AreaResourcesFromEntityAssembler>();
+builder.Services.AddScoped<CreateAreaCommandFromResourcesAssembler>();
+
+// Register HttpClient
+builder.Services.AddHttpClient();
+
+// Register PersonaService
+builder.Services.AddScoped<PersonaService>();
 
 var app = builder.Build();
 
@@ -140,6 +150,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-Console.WriteLine("Starting the application...");
+Console.WriteLine("Starting the Application...");
 
 app.Run();

@@ -1,12 +1,11 @@
-using generar_ticket.ticket.Domain.Model.Commands;
+using generar_ticket.area.Domain.Model.Aggregates;
 using generar_ticket.ticket.Domain.Model.Aggregates;
-using System.Threading.Tasks;
+using generar_ticket.ticket.Domain.Model.Commands;
 
 namespace generar_ticket.ticket.Domain.Services
 {
     public interface ITicketCommandService
     {
-        Task<Ticket?> Handle(CreateTicketCommand command);
-        Task UpdateTicketAsync(Ticket ticket);
+        Task<Ticket> Handle(CreateTicketCommand command, Area area);
     }
 }

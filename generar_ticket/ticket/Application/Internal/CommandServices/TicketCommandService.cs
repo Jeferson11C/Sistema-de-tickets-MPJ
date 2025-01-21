@@ -1,32 +1,35 @@
 using generar_ticket.ticket.Domain.Model.Aggregates;
 using generar_ticket.ticket.Domain.Model.Commands;
-using generar_ticket.ticket.Domain.Repositories;
-using System.Threading.Tasks;
-using generar_ticket.ticket.Domain.Model.ValueObjects;
 using generar_ticket.ticket.Domain.Services;
+using System.Threading.Tasks;
+using generar_ticket.area.Domain.Model.Aggregates;
 
-namespace generar_ticket.ticket.Application.Services
+namespace generar_ticket.ticket.Application.Internal.CommandServices
 {
     public class TicketCommandService : ITicketCommandService
     {
-        private readonly ITicketRepository _ticketRepository;
+        private readonly PersonaService _personaService;
 
-        public TicketCommandService(ITicketRepository ticketRepository)
+        public TicketCommandService(PersonaService personaService)
         {
-            _ticketRepository = ticketRepository;
+            _personaService = personaService;
         }
 
-        public async Task<Ticket?> Handle(CreateTicketCommand command)
+        public async Task<Ticket> Handle(CreateTicketCommand command)
         {
-            var userName = new UserName(command.FirstName, command.LastName);
-            var ticket = Ticket.Create(command, userName);
-            await _ticketRepository.AddAsync(ticket);
-            return ticket;
+            var ticket = new Ticket(command, _personaService);
+            // Add logic to save the ticket to the repository if needed
+            return await Task.FromResult(ticket);
         }
 
-        public async Task UpdateTicketAsync(Ticket ticket)
+        public async Task<Ticket> Handle(CreateTicketCommand command, Area area)
         {
-            await _ticketRepository.UpdateAsync(ticket);
+            var ticket = new Ticket(command, _personaService)
+            {
+                AreaNombre = area.Nombre
+            };
+            // Add logic to save the ticket to the repository if needed
+            return await Task.FromResult(ticket);
         }
     }
 }

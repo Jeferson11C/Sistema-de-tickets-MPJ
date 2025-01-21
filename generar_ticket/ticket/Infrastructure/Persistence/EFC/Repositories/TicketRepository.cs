@@ -1,10 +1,8 @@
-using generar_ticket.Shared.Domain.Repositories;
-using generar_ticket.ticket.Domain.Model.Aggregates;
-using generar_ticket.ticket.Domain.Model.Queries;
-using generar_ticket.ticket.Domain.Repositories;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using generar_ticket.ticket.Domain.Model.Aggregates;
+using generar_ticket.ticket.Domain.Repositories;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 
 namespace generar_ticket.ticket.Infrastructure.Persistence.EFC.Repositories
@@ -12,62 +10,70 @@ namespace generar_ticket.ticket.Infrastructure.Persistence.EFC.Repositories
     public class TicketRepository : ITicketRepository
     {
         private readonly AppDbContext _context;
-        private readonly DbSet<Ticket> _tickets;
 
         public TicketRepository(AppDbContext context)
         {
             _context = context;
-            _tickets = context.Set<Ticket>();
+        }
+
+        public async Task<IEnumerable<Ticket>> GetAllTicketsAsync()
+        {
+            return await _context.Tickets.ToListAsync();
+        }
+
+        public async Task<Ticket> GetTicketByIdAsync(int id)
+        {
+            return await _context.Tickets.FindAsync(id);
+        }
+
+        public async Task<Ticket> GetTicketByNumberAsync(string numeroTicket)
+        {
+            return await _context.Tickets.FirstOrDefaultAsync(t => t.NumeroTicket == numeroTicket);
         }
 
         public async Task AddAsync(Ticket entity)
         {
-            await _tickets.AddAsync(entity);
+            await _context.Tickets.AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Ticket?> FindByIdAsync(int id)
+        public async Task UpdateAsync(Ticket entity)
         {
-            return await _tickets.FindAsync(id);
+            _context.Tickets.Update(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Ticket entity)
+        {
+            _context.Tickets.Remove(entity);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Ticket?> FindByGroupAsync(string group)
         {
-            // Implement logic to find by group if applicable
-            return await Task.FromResult<Ticket?>(null);
+            return await _context.Tickets.FirstOrDefaultAsync(t => t.AreaNombre == group);
         }
 
-        public void Update(Ticket entity)
+        public async Task<Ticket?> FindByIdAsync(int id)
         {
-            _tickets.Update(entity);
-            _context.SaveChanges();
-        }
-
-        public void Remove(Ticket entity)
-        {
-            _tickets.Remove(entity);
-            _context.SaveChanges();
+            return await _context.Tickets.FindAsync(id);
         }
 
         public async Task<IEnumerable<Ticket>> ListAsync()
         {
-            return await _tickets.ToListAsync();
+            return await _context.Tickets.ToListAsync();
         }
 
-        public async Task<Ticket?> GetTicketByIdAsync(GetTicketByIdQuery query)
+        public void Remove(Ticket entity)
         {
-            return await _tickets.FindAsync(query.Id);
+            _context.Tickets.Remove(entity);
+            _context.SaveChanges();
         }
 
-        public async Task<Ticket?> GetTicketByNumberAsync(GetTicketByNumberQuery query)
+        public void Update(Ticket entity)
         {
-            return await _tickets.FirstOrDefaultAsync(t => t.TicketNumber == query.TicketNumber);
-        }
-
-        public async Task UpdateAsync(Ticket ticket)
-        {
-            _tickets.Update(ticket);
-            await _context.SaveChangesAsync();
+            _context.Tickets.Update(entity);
+            _context.SaveChanges();
         }
     }
 }
