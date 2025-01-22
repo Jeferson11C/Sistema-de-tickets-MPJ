@@ -78,5 +78,25 @@ namespace generar_ticket.ticket.Interfaces.REST
             var result = await _ticketQueryService.Handle(query);
             return Ok(result);
         }
+        
+        
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateTicketStatus(int id, [FromBody] UpdateTicketStatusCommand command)
+        {
+            var query = new GetTicketByIdQuery(id);
+            var ticket = await _ticketQueryService.Handle(query);
+            if (ticket == null)
+            {
+                return NotFound("Ticket not found");
+            }
+
+            var result = await _ticketQueryService.Handle(id, command);
+            if (!result)
+            {
+                return NotFound("Ticket not found");
+            }
+
+            return NoContent();
+        }
     }
 }
