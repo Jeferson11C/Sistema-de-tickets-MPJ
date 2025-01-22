@@ -1,6 +1,7 @@
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using generar_ticket.Shared.Interfaces.ASP.Configuration;
 using generar_ticket.area.Interfaces.REST.Transform;
+using generar_ticket.ticket.Application.Internal.QueryServices;
 using generar_ticket.ticket.Domain.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -112,6 +113,11 @@ builder.Services.AddHttpClient();
 
 // Register PersonaService
 builder.Services.AddScoped<PersonaService>();
+builder.Services.AddScoped<ITicketQueryService, TicketQueryService>();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 var app = builder.Build();
 

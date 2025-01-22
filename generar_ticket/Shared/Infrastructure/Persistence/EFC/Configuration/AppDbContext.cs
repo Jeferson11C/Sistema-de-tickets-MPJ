@@ -38,8 +38,9 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
                 entity.HasKey(t => t.Id);
                 entity.Property(t => t.Id).IsRequired().ValueGeneratedOnAdd();
                 entity.Property(t => t.NumeroTicket).IsRequired();
-                entity.Property<string>(t => t.AreaNombre).IsRequired();
+                entity.Property(t => t.AreaNombre).IsRequired();
                 entity.Property(t => t.Fecha).IsRequired();
+                entity.Property(t => t.Documento).IsRequired();
                 entity.Property(t => t.Nombres).IsRequired();
                 entity.Property(t => t.ApePaterno).IsRequired();
                 entity.Property(t => t.ApeMaterno).IsRequired();

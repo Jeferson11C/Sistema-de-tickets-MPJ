@@ -1,19 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Globalization;
+using System.Linq;
 using generar_ticket.ticket.Domain.Model.Commands;
 using generar_ticket.ticket.Domain.Services;
+using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 
 namespace generar_ticket.ticket.Domain.Model.Aggregates
 {
     public class Ticket
     {
-        private static int _lastId = 0;
-
-        public int Id { get; private set; }
+        public int Id { get; set; }
         public string NumeroTicket { get; set; }
-        [NotMapped]
         public string AreaNombre { get; set; }
         public DateTime Fecha { get; set; }
         public string Documento { get; set; }
@@ -22,25 +19,24 @@ namespace generar_ticket.ticket.Domain.Model.Aggregates
         public string ApeMaterno { get; set; }
         public string Estado { get; set; }
 
-        private static Dictionary<string, int> areaTicketCounters = new Dictionary<string, int>();
-
         // Parameterless constructor for EF Core
         public Ticket() { }
 
         // Constructor with parameters
-        public Ticket(CreateTicketCommand command, PersonaService personaService)
+        public Ticket(CreateTicketCommand command, PersonaService personaService, AppDbContext context)
         {
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
             if (personaService == null)
                 throw new ArgumentNullException(nameof(personaService));
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
 
-            Id = ++_lastId;
             Documento = command.Documento;
             AreaNombre = command.AreaNombre;
             Fecha = DateTime.Now;
             Estado = "En espera";
-            NumeroTicket = GenerateTicketNumber(AreaNombre);
+            NumeroTicket = GenerateTicketNumber(AreaNombre, context);
 
             var persona = personaService.GetPersonaData(command.Documento).Result;
             if (persona == null)
@@ -51,17 +47,16 @@ namespace generar_ticket.ticket.Domain.Model.Aggregates
             ApeMaterno = persona.ApeMaterno;
         }
 
-        private string GenerateTicketNumber(string areaNombre)
+        private string GenerateTicketNumber(string areaNombre, AppDbContext context)
         {
-            string areaCode = areaNombre.Substring(0, 1).ToUpper();
+            var lastTicket = context.Tickets
+                .Where(t => t.AreaNombre == areaNombre)
+                .OrderByDescending(t => t.Id)
+                .FirstOrDefault();
 
-            if (!areaTicketCounters.ContainsKey(areaCode))
-            {
-                areaTicketCounters[areaCode] = 0;
-            }
+            int nextCounter = lastTicket != null ? int.Parse(lastTicket.NumeroTicket.Split('-')[1]) + 1 : 1;
 
-            areaTicketCounters[areaCode]++;
-            return $"{areaCode}-{areaTicketCounters[areaCode]:D3}";
+            return $"{areaNombre.Substring(0, 1).ToUpper()}-{nextCounter:D3}";
         }
 
         public string GetFormattedFecha()

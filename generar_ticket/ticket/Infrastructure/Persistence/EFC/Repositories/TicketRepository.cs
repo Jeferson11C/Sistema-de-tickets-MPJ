@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using generar_ticket.ticket.Domain.Model.Aggregates;
 using generar_ticket.ticket.Domain.Repositories;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
+using generar_ticket.ticket.Domain.Model.Queries;
 
 namespace generar_ticket.ticket.Infrastructure.Persistence.EFC.Repositories
 {
@@ -74,6 +75,11 @@ namespace generar_ticket.ticket.Infrastructure.Persistence.EFC.Repositories
         {
             _context.Tickets.Update(entity);
             _context.SaveChanges();
+        }
+
+        public async Task<Ticket> Handle(GetTicketByIdQuery query)
+        {
+            return await _context.Tickets.FindAsync(query.Id);
         }
     }
 }

@@ -9,6 +9,6 @@ namespace generar_ticket.ticket.Domain.Services
     {
         Task<IEnumerable<Ticket>> Handle(GetAllTicketsQuery query);
         Task<IEnumerable<Ticket>> Handle(GetTicketsByAreaQuery query);
-        Task<Ticket> Handle(GetTicketByNumberQuery query);
+        Task<object?> Handle(GetTicketByIdQuery query);
     }
 }
