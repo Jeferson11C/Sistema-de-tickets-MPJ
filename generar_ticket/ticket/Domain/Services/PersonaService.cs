@@ -95,6 +95,5 @@ namespace generar_ticket.ticket.Domain.Services
         public string Nombres { get; set; }
         public string ApePaterno { get; set; }
         public string ApeMaterno { get; set; }
-        public string Direccion { get; set; }
     }
 }

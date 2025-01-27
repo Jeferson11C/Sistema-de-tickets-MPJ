@@ -1,11 +1,11 @@
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using generar_ticket.ticket.Domain.Model.Commands;
-using generar_ticket.ticket.Domain.Model.Aggregates;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
+using generar_ticket.ticket.Domain.Model.Aggregates;
+using generar_ticket.ticket.Domain.Model.Commands;
 using generar_ticket.ticket.Domain.Model.Queries;
+using generar_ticket.ticket.Domain.Services;
+using Microsoft.EntityFrameworkCore;
 
-namespace generar_ticket.ticket.Domain.Services
+namespace generar_ticket.ticket.Application.Internal.QueryServices
 {
     public class TicketQueryService : ITicketQueryService
     {

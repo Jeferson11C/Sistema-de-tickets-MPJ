@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using generar_ticket.ticket.Domain.Model.Aggregates;
 using generar_ticket.area.Domain.Model.Aggregates;
+using generar_ticket.Users.Domain.Model.Aggregate;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using EntityFrameworkCore.CreatedUpdatedDate.Extensions;
+using generar_ticket.Users.Domain.Model.ValueObject;
 
 namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
 {
@@ -10,6 +12,7 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
     {
         public DbSet<Area?> Areas { get; set; }
         public DbSet<Ticket?> Tickets { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -47,7 +50,26 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
                 entity.Property(t => t.Estado).IsRequired();
             });
 
-            builder.UseSnakeCaseWithPluralizedTableNamingConvention();
+            builder.Entity<User>(entity =>
+            {
+                builder.Entity<User>().HasKey(u => u.Id);
+                builder.Entity<User>().Property(u => u.Id).IsRequired().ValueGeneratedOnAdd();
+                builder.Entity<User>().Property(u => u.Username).IsRequired();
+                builder.Entity<User>().Property(u => u.Password).IsRequired();
+                builder.Entity<User>().Property(u => u.Rol).IsRequired();
+                builder.Entity<User>().Property(u => u.Area).IsRequired();
+
+                builder.Entity<User>().OwnsOne(u => u.NombreCompleto,
+                    n =>
+                    {
+                        n.WithOwner().HasForeignKey("Id");
+                        n.Property(p => p.Nombre).HasColumnName("Nombre");
+                        n.Property(p => p.ApePaterno).HasColumnName("ApePaterno");
+                        n.Property(p => p.ApeMaterno).HasColumnName("ApeMaterno");
+                    });
+
+                builder.UseSnakeCaseWithPluralizedTableNamingConvention();
+            });
         }
     }
 }
