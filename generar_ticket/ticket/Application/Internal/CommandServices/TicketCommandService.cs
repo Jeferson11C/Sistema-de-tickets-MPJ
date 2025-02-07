@@ -34,5 +34,10 @@ namespace generar_ticket.ticket.Application.Internal.CommandServices
             // Add logic to save the ticket to the repository if needed
             return await Task.FromResult(ticket);
         }
+
+        public Task<bool> Handle(UpdateTicketStatusCommand command)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -6,5 +6,6 @@ namespace generar_ticket.Users.Domain.Services
     public interface IUserCommandService
     {
         Task<User> Handle(CreateUserCommand command);
+        Task<(User user, string token)> Handle(SignInCommand command);
     }
 }

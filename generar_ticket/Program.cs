@@ -1,17 +1,41 @@
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using generar_ticket.Shared.Interfaces.ASP.Configuration;
 using generar_ticket.area.Interfaces.REST.Transform;
+using generar_ticket.Observaciones.Domain.Services;
+using generar_ticket.Observaciones.Interfaces.REST.Transform;
 using generar_ticket.ticket.Application.Internal.QueryServices;
 using generar_ticket.ticket.Domain.Services;
+using generar_ticket.Users.Application.Internal.CommandServices;
+using generar_ticket.Users.Application.Internal.OutboundServices;
 using generar_ticket.Users.Domain.Repositories;
+using generar_ticket.Users.Domain.Services;
 using generar_ticket.Users.Infrastructure.Persistence.EFC.Repositories;
+using generar_ticket.Users.Infrastructure.Tokens.Configuration;
+using generar_ticket.Users.Infrastructure.Tokens.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
+
+using System.Net.WebSockets;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using generar_ticket.WebSockets;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Net.Http;
+using generar_ticket.Users.Infrastructure.Tokens.Services.generar_ticket.Users.Infrastructure.Tokens.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Set the HTTPS port
+// Register IHttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
+// Set the HTTPS port
 
 // Add services to the container.
 builder.Services.AddControllers(options => options.Conventions.Add(new KebabCaseRouteNamingConvention()));
@@ -39,6 +63,32 @@ builder.Services.AddDbContext<AppDbContext>(
                     .LogTo(Console.WriteLine, LogLevel.Error)
                     .EnableDetailedErrors();
     });
+
+// Configure JWT Authentication
+var tokenSettings = builder.Configuration.GetSection("TokenSettings").Get<TokenSettings>();
+var key = Encoding.ASCII.GetBytes(tokenSettings.Secret);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+// Add Authorization
+builder.Services.AddAuthorization();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -109,22 +159,47 @@ builder.Services.AddScoped<CreateAreaCommandFromResourcesAssembler>();
 // Register HttpClient
 builder.Services.AddHttpClient();
 
+// Register PrintService with required parameters
+/*builder.Services.AddScoped<PrintService>(provider =>
+{
+    var apiKey = builder.Configuration["PrintService:ApiKey"];
+    var httpClient = provider.GetRequiredService<HttpClient>();
+    return new PrintService(apiKey, httpClient);
+});*/
+
 // Register PersonaService
 builder.Services.AddScoped<PersonaService>();
 builder.Services.AddScoped<ITicketQueryService, TicketQueryService>();
 
-
-// Register user services
 // Register user services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-// Register user services
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserCommandService, UserCommandService>();
+builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register Comment transformation services
+builder.Services.AddScoped<CommentResourceFromEntityAssembler>();
+builder.Services.AddScoped<CreateCommentCommandFromResourceAssembler>();
+builder.Services.AddScoped<ICommentCommandService, CommentCommandService>();
+
+// Register PrinterService
+builder.Services.AddSingleton<PrinterService>();
+builder.Services.AddScoped<PrintService>();
 
 var app = builder.Build();
+
+// Habilitar WebSockets
+var webSocketOptions = new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromMinutes(2)
+};
+app.UseWebSockets(webSocketOptions);
+
+// Usar el middleware de WebSocket
+app.UseMiddleware<WebSocketMiddleware>();
 
 // Verify Database Objects are Created
 try
@@ -157,6 +232,7 @@ app.UseCors("AllowedAllPolicy");
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication(); // Add this line to enable authentication
 app.UseAuthorization();
 
 app.MapControllers();

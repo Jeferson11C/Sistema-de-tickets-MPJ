@@ -7,5 +7,6 @@ namespace generar_ticket.ticket.Domain.Services
     public interface ITicketCommandService
     {
         Task<Ticket> Handle(CreateTicketCommand command, Area area);
+        Task<bool> Handle(UpdateTicketStatusCommand command); // Add this line
     }
 }

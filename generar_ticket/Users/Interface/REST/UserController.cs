@@ -7,6 +7,12 @@ using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using generar_ticket.Users.Application.Internal.CommandServices;
+using generar_ticket.Users.Application.Internal.OutboundServices;
+using generar_ticket.Users.Domain.Model.Command;
+using generar_ticket.Users.Domain.Services;
+using generar_ticket.Users.Infrastructure.Tokens.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace generar_ticket.Users.Interface.REST
 {
@@ -16,13 +22,18 @@ namespace generar_ticket.Users.Interface.REST
     {
         private readonly IUserRepository _userRepository;
         private readonly AppDbContext _context;
+        private readonly IUserCommandService _userCommandService;
+        private readonly ITokenService _tokenService;
 
-        public UserController(IUserRepository userRepository, AppDbContext context)
+        public UserController(IUserRepository userRepository, AppDbContext context, IUserCommandService userCommandService, ITokenService tokenService)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userCommandService = userCommandService ?? throw new ArgumentNullException(nameof(userCommandService));
+            _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<UserResource>> CreateUser([FromBody] CreateUserResource resource)
         {
@@ -37,7 +48,36 @@ namespace generar_ticket.Users.Interface.REST
             var userResource = UserResourceFromEntityAssembler.ToResourceFromEntity(user);
             return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userResource);
         }
+        
+        
+        [AllowAnonymous]
+        [HttpPost("sign-in")]
+        public async Task<IActionResult> SignIn([FromBody] SignInResource resource)
+        {
+            if (resource == null) return BadRequest("Invalid sign-in data.");
 
+            var signInCommand = SignInCommandFromResourceAssembler.ToCommandFromResource(resource);
+            var authenticatedUser = await _userCommandService.Handle(signInCommand);
+            if (authenticatedUser.user == null) return Unauthorized();
+
+            var token = _tokenService.GenerateToken(authenticatedUser.user);
+            var authenticatedUserResource = AuthenticatedUserResourceFromEntityAssembler.ToResourceFromEntity(authenticatedUser.user, token);
+            return Ok(authenticatedUserResource);
+        }
+        
+        [HttpPost("sign-out")]
+        public IActionResult SignOut()
+        {
+            var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+            _tokenService.InvalidateToken(token);
+
+            return Ok(new { message = "Session closed successfully." });
+        }
+        
+
+
+
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<UserResource>> GetUserById(int id)
         {
@@ -47,7 +87,8 @@ namespace generar_ticket.Users.Interface.REST
             var userResource = UserResourceFromEntityAssembler.ToResourceFromEntity(user);
             return Ok(userResource);
         }
-
+        
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserResource>>> GetAllUsers()
         {
@@ -56,6 +97,7 @@ namespace generar_ticket.Users.Interface.REST
             return Ok(userResources);
         }
         
+        [Authorize]
         [HttpGet("area/{area}")]
         public async Task<ActionResult<IEnumerable<UserResource>>> GetUsersByArea(string area)
         {
@@ -69,6 +111,8 @@ namespace generar_ticket.Users.Interface.REST
             return Ok(userResources);
         }
 
+       
+        [Authorize]
         [HttpGet("role/{role}")]
         public async Task<ActionResult<IEnumerable<UserResource>>> GetUsersByRole(string role)
         {
@@ -82,19 +126,22 @@ namespace generar_ticket.Users.Interface.REST
             return Ok(userResources);
         }
         
+        
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserResource resource)
         {
-            if (resource == null || id != resource.Id) return BadRequest("Invalid user data.");
+            if (resource == null) return BadRequest("Invalid user data.");
 
             var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null) return NotFound();
 
-            user.Update(resource); // Assuming User has an Update method that accepts the resource
+            var command = new UpdateUserCommand(id,  resource.Username, resource.Password, resource.Rol, resource.Area);
+            user.Update(command);
             await _userRepository.UpdateAsync(user);
-
             return NoContent();
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
@@ -105,6 +152,23 @@ namespace generar_ticket.Users.Interface.REST
             await _userRepository.DeleteAsync(user);
             return NoContent();
         }
+        
+
+        [HttpPut("{id}/estado")]
+        public async Task<IActionResult> UpdateUserEstado(int id, [FromBody] UpdateUserEstadoResource resource)
+        {
+            var user = await _userRepository.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            user.Estado = resource.Estado; // Update the estado field
+            await _userRepository.UpdateAsync(user); // Ensure UpdateAsync method exists in IUserRepository
+
+            return NoContent();
+        }
+        
 
 
     }

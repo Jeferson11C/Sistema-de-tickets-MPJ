@@ -23,6 +23,19 @@ namespace generar_ticket.area.Interfaces.REST
             _areaResourcesAssembler = areaResourcesAssembler;
             _createAreaAssembler = createAreaAssembler;
         }
+        
+        [HttpPost]
+        public ActionResult<AreaResources> CreateArea([FromBody] CreatedAreaResources resource)
+        {
+            var area = _createAreaAssembler.ToEntity(resource);
+
+            // Save the Area entity to the database
+            _context.Areas.Add(area);
+            _context.SaveChanges();
+
+            var createdResource = _areaResourcesAssembler.ToResource(area);
+            return CreatedAtAction(nameof(GetArea), new { id = createdResource.Id }, createdResource);
+        }
 
         [HttpGet("{id}")]
         public ActionResult<AreaResources> GetArea(int id)
@@ -46,18 +59,24 @@ namespace generar_ticket.area.Interfaces.REST
             var resources = areas.Select(a => _areaResourcesAssembler.ToResource(a)).ToList();
             return Ok(resources);
         }
-
-        [HttpPost]
-        public ActionResult<AreaResources> CreateArea([FromBody] CreatedAreaResources resource)
+        
+        [HttpDelete("{id}")]
+        public IActionResult DeleteArea(int id)
         {
-            var area = _createAreaAssembler.ToEntity(resource);
+            // Retrieve the Area entity from the database
+            var area = _context.Areas.Find(id);
+            if (area == null)
+            {
+                return NotFound();
+            }
 
-            // Save the Area entity to the database
-            _context.Areas.Add(area);
+            // Remove the Area entity from the database
+            _context.Areas.Remove(area);
             _context.SaveChanges();
 
-            var createdResource = _areaResourcesAssembler.ToResource(area);
-            return CreatedAtAction(nameof(GetArea), new { id = createdResource.Id }, createdResource);
+            return NoContent();
         }
+
+
     }
 }

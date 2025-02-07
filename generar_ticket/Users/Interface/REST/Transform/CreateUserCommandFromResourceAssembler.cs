@@ -11,6 +11,7 @@ namespace generar_ticket.Users.Interface.REST.Transform
 
             return new CreateUserCommand(
                 resource.Id,
+                resource.Dni,
                 resource.Nombre,
                 resource.ApePaterno,
                 resource.ApeMaterno,

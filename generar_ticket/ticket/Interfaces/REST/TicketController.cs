@@ -8,6 +8,7 @@ using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using generar_ticket.ticket.Domain.Model.Queries;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace generar_ticket.ticket.Interfaces.REST
 {
@@ -18,31 +19,47 @@ namespace generar_ticket.ticket.Interfaces.REST
         private readonly PersonaService _personaService;
         private readonly AppDbContext _context;
         private readonly ITicketQueryService _ticketQueryService;
+        private readonly PrintService _printService;
 
-        public TicketController(PersonaService personaService, AppDbContext context, ITicketQueryService ticketQueryService)
+        public TicketController(PersonaService personaService, AppDbContext context, ITicketQueryService ticketQueryService, PrintService printService)
         {
             _personaService = personaService;
             _context = context;
             _ticketQueryService = ticketQueryService;
+            _printService = printService;
         }
 
         [HttpPost]
         public async Task<ActionResult<TicketResource>> CreateTicket([FromBody] CreateTicketCommand command)
         {
-            var persona = await _personaService.GetPersonaData(command.Documento);
-            if (persona == null)
+            try
             {
-                return NotFound(new { Message = "Persona data not found" });
+                var persona = await _personaService.GetPersonaData(command.Documento);
+                if (persona == null)
+                {
+                    return NotFound(new { Message = "Persona data not found" });
+                }
+
+                var ticket = new Ticket(command, _personaService, _context);
+                _context.Tickets.Add(ticket);
+                await _context.SaveChangesAsync();
+
+                var ticketResource = TicketResourceFromEntityAssembler.ToResourceFromEntity(ticket);
+
+                // Print the ticket automatically
+                await _printService.PrintTicketAsync(ticketResource);
+
+                return CreatedAtAction(nameof(GetTicketById), new { id = ticket.Id }, ticketResource);
             }
-
-            var ticket = new Ticket(command, _personaService, _context);
-            _context.Tickets.Add(ticket);
-            await _context.SaveChangesAsync();
-
-            var ticketResource = TicketResourceFromEntityAssembler.ToResourceFromEntity(ticket);
-            return CreatedAtAction(nameof(GetTicketById), new { id = ticket.Id }, ticketResource);
+            catch (Exception ex)
+            {
+                // Log the exception (you can use a logging framework like Serilog, NLog, etc.)
+                Console.WriteLine($"An error occurred while creating the ticket: {ex.Message}\n{ex.StackTrace}");
+                return StatusCode(500, "An internal server error occurred.");
+            }
         }
-
+        
+        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Ticket>>> GetAllTickets()
         {
@@ -59,6 +76,8 @@ namespace generar_ticket.ticket.Interfaces.REST
             return Ok(result);
         }
 
+       
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Ticket>> GetTicketById(int id)
         {
@@ -71,6 +90,7 @@ namespace generar_ticket.ticket.Interfaces.REST
             return Ok(result);
         }
 
+        
         [HttpGet("area/{areaNombre}")]
         public async Task<ActionResult<IEnumerable<Ticket>>> GetTicketsByArea(string areaNombre)
         {
@@ -80,23 +100,47 @@ namespace generar_ticket.ticket.Interfaces.REST
         }
         
         
+        [Authorize]
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateTicketStatus(int id, [FromBody] UpdateTicketStatusCommand command)
         {
-            var query = new GetTicketByIdQuery(id);
-            var ticket = await _ticketQueryService.Handle(query);
+            var ticket = await _context.Tickets.FindAsync(id);
             if (ticket == null)
             {
                 return NotFound("Ticket not found");
             }
 
-            var result = await _ticketQueryService.Handle(id, command);
-            if (!result)
+            ticket.UpdateTicketStatus(command);
+            _context.Tickets.Update(ticket);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+        
+        [Authorize]
+        [HttpPut("{id}/area")]
+        public async Task<IActionResult> UpdateTicketArea(int id, [FromBody] UpdateTicketAreaCommand command)
+        {
+            var ticket = await _context.Tickets.FindAsync(id);
+            if (ticket == null)
             {
                 return NotFound("Ticket not found");
             }
 
+            ticket.UpdateTicketArea(command, _context);
+
+            _context.Tickets.Update(ticket);
+            await _context.SaveChangesAsync();
+
             return NoContent();
+        }
+        
+
+        [HttpPost("installed")]
+        public ActionResult<List<PrinterInfo>> GetInstalledPrinters()
+        {
+            var printers = PrinterService.GetInstalledPrinters();
+            return Ok(printers);
         }
     }
 }

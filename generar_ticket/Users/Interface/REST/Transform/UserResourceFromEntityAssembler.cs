@@ -12,11 +12,13 @@ namespace generar_ticket.Users.Interface.REST.Transform
 
             return new UserResource(
                 entity.Id,
+                entity.Dni,
                 entity.NombreCompletoDisplay, // Use the display property for full name
                 entity.Username,
                 entity.Password,
                 entity.Rol,
-                entity.Area
+                entity.Area,
+                entity.Estado
             );
         }
     }
