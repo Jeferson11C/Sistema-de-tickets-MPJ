@@ -7,6 +7,11 @@ using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using generar_ticket.Users.Application.Internal.CommandServices;
+using generar_ticket.Users.Application.Internal.OutboundServices;
+using generar_ticket.Users.Domain.Services;
+using generar_ticket.Users.Infrastructure.Tokens.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace generar_ticket.Users.Interface.REST
 {
@@ -16,13 +21,18 @@ namespace generar_ticket.Users.Interface.REST
     {
         private readonly IUserRepository _userRepository;
         private readonly AppDbContext _context;
+        private readonly IUserCommandService _userCommandService;
+        private readonly ITokenService _tokenService;
 
-        public UserController(IUserRepository userRepository, AppDbContext context)
+        public UserController(IUserRepository userRepository, AppDbContext context, IUserCommandService userCommandService, ITokenService tokenService)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userCommandService = userCommandService ?? throw new ArgumentNullException(nameof(userCommandService));
+            _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<UserResource>> CreateUser([FromBody] CreateUserResource resource)
         {
@@ -37,6 +47,25 @@ namespace generar_ticket.Users.Interface.REST
             var userResource = UserResourceFromEntityAssembler.ToResourceFromEntity(user);
             return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, userResource);
         }
+        
+        
+        [AllowAnonymous]
+        [HttpPost("sign-in")]
+        public async Task<IActionResult> SignIn([FromBody] SignInResource resource)
+        {
+            if (resource == null) return BadRequest("Invalid sign-in data.");
+
+            var signInCommand = SignInCommandFromResourceAssembler.ToCommandFromResource(resource);
+            var authenticatedUser = await _userCommandService.Handle(signInCommand);
+            if (authenticatedUser.user == null) return Unauthorized();
+
+            var token = _tokenService.GenerateToken(authenticatedUser.user);
+            var authenticatedUserResource = AuthenticatedUserResourceFromEntityAssembler.ToResourceFromEntity(authenticatedUser.user, token);
+            return Ok(authenticatedUserResource);
+        }
+        
+        
+
 
         [HttpGet("{id}")]
         public async Task<ActionResult<UserResource>> GetUserById(int id)
@@ -48,6 +77,8 @@ namespace generar_ticket.Users.Interface.REST
             return Ok(userResource);
         }
 
+        
+  
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserResource>>> GetAllUsers()
         {
@@ -69,6 +100,7 @@ namespace generar_ticket.Users.Interface.REST
             return Ok(userResources);
         }
 
+       
         [HttpGet("role/{role}")]
         public async Task<ActionResult<IEnumerable<UserResource>>> GetUsersByRole(string role)
         {
@@ -81,6 +113,7 @@ namespace generar_ticket.Users.Interface.REST
             var userResources = users.Select(UserResourceFromEntityAssembler.ToResourceFromEntity);
             return Ok(userResources);
         }
+        
         
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserResource resource)

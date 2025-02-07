@@ -2,6 +2,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using generar_ticket.Observaciones.Domain.Model.Aggregates;
 using generar_ticket.ticket.Domain.Model.Commands;
 using generar_ticket.ticket.Domain.Services;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
@@ -19,6 +20,10 @@ namespace generar_ticket.ticket.Domain.Model.Aggregates
         public string ApePaterno { get; set; }
         public string ApeMaterno { get; set; }
         public string Estado { get; set; }
+        
+        public DateTime? UpdatedAt { get; set; }
+        
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
         // Parameterless constructor for EF Core
         public Ticket() { }
@@ -63,6 +68,12 @@ namespace generar_ticket.ticket.Domain.Model.Aggregates
         public string GetFormattedFecha()
         {
             return Fecha.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+        
+        public void UpdateTicketStatus(UpdateTicketStatusCommand command)
+        {
+            Estado = command.Estado;
+            UpdatedAt = DateTime.Now; // Automatically set the current date and time
         }
     }
 }

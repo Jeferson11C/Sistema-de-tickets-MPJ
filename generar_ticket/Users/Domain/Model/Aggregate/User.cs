@@ -1,3 +1,4 @@
+using generar_ticket.Observaciones.Domain.Model.Aggregates;
 using generar_ticket.Users.Domain.Model.Command;
 using generar_ticket.Users.Domain.Model.ValueObject;
 using generar_ticket.Users.Interface.REST.Resources;
@@ -12,6 +13,8 @@ namespace generar_ticket.Users.Domain.Model.Aggregate
         public string Password { get; private set; }
         public string Rol { get; private set; }
         public string Area { get; private set; }
+        
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>(); 
 
         // Parameterless constructor for EF Core
         private User()
@@ -57,9 +60,9 @@ namespace generar_ticket.Users.Domain.Model.Aggregate
         // Method to validate the role
         private static string ValidateRole(string rol)
         {
-            if (rol != "admi" && rol != "user")
+            if (rol != "Administrador" && rol != "Recepcionista")
             {
-                throw new ArgumentException("Invalid role. Allowed roles are 'admi' and 'user'.");
+                throw new ArgumentException("Invalid role. Allowed roles are 'Administrador' and 'Recepcionista'.");
             }
 
             return rol;

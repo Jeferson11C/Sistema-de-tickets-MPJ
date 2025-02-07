@@ -4,6 +4,7 @@ using generar_ticket.area.Domain.Model.Aggregates;
 using generar_ticket.Users.Domain.Model.Aggregate;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using EntityFrameworkCore.CreatedUpdatedDate.Extensions;
+using generar_ticket.Observaciones.Domain.Model.Aggregates;
 using generar_ticket.Users.Domain.Model.ValueObject;
 
 namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
@@ -13,6 +14,7 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
         public DbSet<Area?> Areas { get; set; }
         public DbSet<Ticket?> Tickets { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -48,6 +50,7 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
                 entity.Property(t => t.ApePaterno).IsRequired();
                 entity.Property(t => t.ApeMaterno).IsRequired();
                 entity.Property(t => t.Estado).IsRequired();
+                entity.Property(t => t.UpdatedAt).IsRequired(false); 
             });
 
             builder.Entity<User>(entity =>
@@ -69,6 +72,24 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
                     });
 
                 builder.UseSnakeCaseWithPluralizedTableNamingConvention();
+            });
+
+            builder.Entity<Comment>(entity =>
+            {
+                entity.HasKey(c => c.Id);
+                entity.Property(c => c.Id).IsRequired().ValueGeneratedOnAdd();
+                entity.Property(c => c.Coment).IsRequired();
+                entity.Property(c => c.TicketId).IsRequired();
+                entity.Property(c => c.CreatedAt).IsRequired();
+                entity.Property(c => c.UserId).IsRequired(); // Ensure UserId is required
+
+                entity.HasOne(c => c.Ticket)
+                    .WithMany(t => t.Comments)
+                    .HasForeignKey(c => c.TicketId);
+
+                entity.HasOne(c => c.User) // Configure the relationship with User
+                    .WithMany(u => u.Comments)
+                    .HasForeignKey(c => c.UserId);
             });
         }
     }

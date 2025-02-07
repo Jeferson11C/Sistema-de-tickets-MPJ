@@ -10,7 +10,7 @@ namespace generar_ticket.ticket.Interfaces.REST.Transform
             return new TicketResource(
                 entity.Id,
                 entity.NumeroTicket,
-                entity.AreaNombre, // Usar la propiedad AreaNombre
+                entity.AreaNombre, 
                 entity.Fecha,
                 entity.Documento,
                 entity.Nombres,

@@ -1,0 +1,13 @@
+using generar_ticket.Users.Domain.Model.Aggregate;
+using generar_ticket.Users.Interface.REST.Resources;
+
+namespace generar_ticket.Users.Interface.REST.Transform
+{
+    public static class AuthenticatedUserResourceFromEntityAssembler
+    {
+        public static AuthenticatedUserResource ToResourceFromEntity(User entity, string token)
+        {
+            return new AuthenticatedUserResource(entity.Id, entity.Username, entity.Password, token);
+        }
+    }
+}

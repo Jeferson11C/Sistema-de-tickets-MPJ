@@ -8,6 +8,7 @@ using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using generar_ticket.ticket.Domain.Model.Queries;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace generar_ticket.ticket.Interfaces.REST
 {
@@ -43,6 +44,7 @@ namespace generar_ticket.ticket.Interfaces.REST
             return CreatedAtAction(nameof(GetTicketById), new { id = ticket.Id }, ticketResource);
         }
 
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Ticket>>> GetAllTickets()
         {
@@ -59,6 +61,8 @@ namespace generar_ticket.ticket.Interfaces.REST
             return Ok(result);
         }
 
+       
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Ticket>> GetTicketById(int id)
         {
@@ -71,6 +75,7 @@ namespace generar_ticket.ticket.Interfaces.REST
             return Ok(result);
         }
 
+
         [HttpGet("area/{areaNombre}")]
         public async Task<ActionResult<IEnumerable<Ticket>>> GetTicketsByArea(string areaNombre)
         {
@@ -80,21 +85,19 @@ namespace generar_ticket.ticket.Interfaces.REST
         }
         
         
+
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateTicketStatus(int id, [FromBody] UpdateTicketStatusCommand command)
         {
-            var query = new GetTicketByIdQuery(id);
-            var ticket = await _ticketQueryService.Handle(query);
+            var ticket = await _context.Tickets.FindAsync(id);
             if (ticket == null)
             {
                 return NotFound("Ticket not found");
             }
 
-            var result = await _ticketQueryService.Handle(id, command);
-            if (!result)
-            {
-                return NotFound("Ticket not found");
-            }
+            ticket.UpdateTicketStatus(command);
+            _context.Tickets.Update(ticket);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }

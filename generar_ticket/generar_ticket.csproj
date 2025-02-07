@@ -10,7 +10,8 @@
 
     <ItemGroup>
         <!-- Dependency Injection related packages -->
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
         <!-- Entity Framework Core Database Persistence related packages -->
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.6" />
@@ -23,18 +24,21 @@
         <PackageReference Include="Humanizer" Version="2.14.1" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <!-- OpenAPI Documentation related packages -->
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
-        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
         <!-- BCrypt Encryption related packages -->
-        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <!-- JSON Web Tokens related packages -->
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6"/>
-        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.6.0"/>
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
+        <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.6.0" />
+        
+        
     </ItemGroup>
 
 
     <ItemGroup>
+      <Folder Include="Observaciones\Domain\Model\Entities\" />
       <Folder Include="ticket\Domain\Model\ValueObjects\" />
     </ItemGroup>
 
