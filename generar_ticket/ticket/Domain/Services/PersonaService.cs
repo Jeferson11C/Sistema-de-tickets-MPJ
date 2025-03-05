@@ -1,6 +1,5 @@
 using System;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
@@ -20,105 +19,75 @@ namespace generar_ticket.ticket.Domain.Services
 
         public async Task<PersonaResponse> GetPersonaData(string documento)
         {
+            if (string.IsNullOrWhiteSpace(documento) || (documento.Length != 8 && documento.Length != 9))
+            {
+                _logger.LogWarning("Documento inválido: {Documento}", documento);
+                return null;
+            }
+
+            var metodo = documento.Length == 8 ? "RENIEC" : "CE";
+            var url = "http://173.17.0.2/api/v1/ws_pide";
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, url);
+            request.Headers.Add("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjb3VudHJ5IjoiUGVyXHUwMGZhIiwiZGVwYXJ0bWVudCI6IkNhamFtYXJjYSIsInByb3ZpbmNlIjoiSmFcdTAwZTluIiwiZGlzdHJpY3QiOiJKYVx1MDBlOW4iLCJydWMiOjIwMjAxOTg3Mjk3LCJjb21wYW55IjoiTXVuaWNpcGFsaWRhZCBQcm92aW5jaWFsIGRlIEphXHUwMGU5biIsImVtYWlsIjoic2lzdGVtYXNAbXVuaWphZW4uZ29iLnBlIiwiZGV2ZWxvcGVyIjoiQmVybWVvIExvemFubyBIZXJsZXNzIERhbmR5IiwiY29udGFjdCI6Imhlcmxlc3NfYmVybWVvQGxpdmUuY29tIn0.aofOGiTG8z_zr12dX1hINIP5Nm1zFhJYhq0qnn0Xk-0"); // Token válido
+
+            // ✅ Enviar datos como form-data
+            var formData = new MultipartFormDataContent
+            {
+                { new StringContent(metodo), "metodo" },
+                { new StringContent(documento), "doc" },
+                { new StringContent("0"), "iduser_app" }
+            };
+            request.Content = formData;
+
+            // Log de la solicitud
+            _logger.LogInformation("Enviando form-data a la API: Metodo={Metodo}, Documento={Documento}, IdUserApp=0", metodo, documento);
+
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Post,
-                    "https://siga.munijlo.gob.pe/consultardocumento/api/dni");
-                var content = new StringContent($"{{\r\n    \"codigo\": \"{documento}\"\r\n}}", Encoding.UTF8,
-                    "application/json");
-                request.Content = content;
-
-                _logger.LogInformation("Llamando a la API con URL: {Url}", request.RequestUri);
-
                 var response = await _httpClient.SendAsync(request);
+                var responseData = await response.Content.ReadAsStringAsync();
 
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                _logger.LogInformation("Respuesta de la API: {ResponseData}", responseData);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning(
-                        "Datos no encontrados para el documento: {Documento}. Código de estado: {StatusCode}",
-                        documento, response.StatusCode);
+                    _logger.LogWarning("La API devolvió un estado inesperado: {StatusCode}", response.StatusCode);
                     return null;
                 }
 
-                response.EnsureSuccessStatusCode();
-                var responseData = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Respuesta de la API: {ResponseData}", responseData);
+                var apiResponse = JsonConvert.DeserializeObject<ApiResponse>(responseData);
+                if (apiResponse == null || apiResponse.ESTADO != "0000")
+                {
+                    _logger.LogError("Error en la respuesta de la API: {Mensaje}", apiResponse?.MENSAJE);
+                    return null;
+                }
 
-                if (response.Content.Headers.ContentType.MediaType.Equals("application/json",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    var apiResponse = JsonConvert.DeserializeObject<ApiResponse>(responseData);
-                    if (apiResponse.Success)
-                    {
-                        return apiResponse.Data;
-                    }
-                    else
-                    {
-                        _logger.LogWarning(
-                            "API response indicates failure for documento: {Documento}. Message: {Message}", documento,
-                            apiResponse.Message);
-                        return null;
-                    }
-                }
-                else if (response.Content.Headers.ContentType.MediaType.Equals("application/xml",
-                             StringComparison.OrdinalIgnoreCase))
-                {
-                    var serializer = new System.Xml.Serialization.XmlSerializer(typeof(PersonaResponse));
-                    using (var stringReader = new System.IO.StringReader(responseData))
-                    {
-                        return (PersonaResponse)serializer.Deserialize(stringReader);
-                    }
-                }
-                else
-                {
-                    _logger.LogError("La respuesta no es ni JSON ni XML. Tipo de contenido: {ContentType}",
-                        response.Content.Headers.ContentType.MediaType);
-                    throw new Exception("La respuesta no es ni JSON ni XML");
-                }
+                return JsonConvert.DeserializeObject<PersonaResponse>(responseData);
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Error al obtener los datos de la persona para el documento: {Documento}",
-                    documento);
-                throw new Exception("Error al obtener los datos de la persona", ex);
+                _logger.LogError(ex, "Error de conexión al consultar el documento: {Documento}", documento);
+                return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Ocurrió un error inesperado al obtener los datos de la persona para el documento: {Documento}",
-                    documento);
-                throw;
+                _logger.LogError(ex, "Error inesperado al obtener datos del documento: {Documento}", documento);
+                return null;
             }
         }
-    }
 
-    public class ApiResponse
-    {
-        [JsonProperty("success")] public bool Success { get; set; }
-        public string Message { get; set; }
-        public PersonaResponse Data { get; set; }
-    }
+        public class ApiResponse
+        {
+            [JsonProperty("ESTADO")] public string ESTADO { get; set; }
+            [JsonProperty("MENSAJE")] public string MENSAJE { get; set; }
+        }
 
-    public class PersonaResponse
-    {
-        [JsonProperty("nombres")] public string Nombres { get; set; }
-
-        [JsonProperty("apellido_paterno")] public string ApePaterno { get; set; }
-
-        [JsonProperty("apellido_materno")] public string ApeMaterno { get; set; }
-
-        [JsonProperty("direccion")] public string Direccion { get; set; }
-
-        [JsonProperty("nombre_completo")] public string NombreCompleto { get; set; }
-
-        [JsonProperty("codigo_verificacion")] public int CodigoVerificacion { get; set; }
-
-        [JsonProperty("ubigeo_sunat")] public string UbigeoSunat { get; set; }
-
-        [JsonProperty("numero")] public string Numero { get; set; }
-
-        [JsonProperty("direccion_completa")] public string DireccionCompleta { get; set; }
-
-        [JsonProperty("ubigeo")] public string[] Ubigeo { get; set; }
+        public class PersonaResponse
+        {
+            [JsonProperty("NOMBRES")] public string Nombres { get; set; }
+            [JsonProperty("PATERNO")] public string ApePaterno { get; set; }
+            [JsonProperty("MATERNO")] public string ApeMaterno { get; set; }
+        }
     }
 }

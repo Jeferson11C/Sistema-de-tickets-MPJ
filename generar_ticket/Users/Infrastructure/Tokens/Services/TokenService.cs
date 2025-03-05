@@ -49,7 +49,9 @@ namespace generar_ticket.Users.Infrastructure.Tokens.Services
                     Subject = new ClaimsIdentity(new[]
                     {
                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                        new Claim(ClaimTypes.Name, user.Username)
+                        new Claim("Ventanilla", user.Ventanilla),
+                        new Claim(ClaimTypes.Role, user.Rol), // Add role claim
+                        new Claim("Area", user.Area) // Add area claim
                     }),
                     Expires = DateTime.UtcNow.AddMinutes(60),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),

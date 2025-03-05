@@ -15,7 +15,7 @@ namespace generar_ticket.Observaciones.Interfaces.REST.Transform
                 entity.Ticket.NumeroTicket,
                 entity.Ticket.Estado,
                 entity.UserId, // Map the UserId
-                entity.User?.Username // Map the Username
+                entity.User?.NombreCompletoDisplay // Map the full name as a string
             );
         }
     }

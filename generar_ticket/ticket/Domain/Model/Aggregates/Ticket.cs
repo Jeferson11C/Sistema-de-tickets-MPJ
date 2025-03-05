@@ -1,3 +1,4 @@
+
 // Ticket.cs
 using System;
 using System.Globalization;
@@ -55,19 +56,15 @@ namespace generar_ticket.ticket.Domain.Model.Aggregates
 
         private string GenerateTicketNumber(string areaNombre, AppDbContext context)
         {
+            var today = DateTime.Today;
             var lastTicket = context.Tickets
-                .Where(t => t.AreaNombre == areaNombre)
+                .Where(t => t.AreaNombre == areaNombre && t.Fecha.Date == today)
                 .OrderByDescending(t => t.Id)
                 .FirstOrDefault();
 
             int nextCounter = lastTicket != null ? int.Parse(lastTicket.NumeroTicket.Split('-')[1]) + 1 : 1;
 
-            string newTicketNumber;
-            do
-            {
-                newTicketNumber = $"{areaNombre.Substring(0, 1).ToUpper()}-{nextCounter:D3}";
-                nextCounter++;
-            } while (context.Tickets.Any(t => t.NumeroTicket == newTicketNumber));
+            string newTicketNumber = $"{areaNombre.Substring(0, 1).ToUpper()}-{nextCounter:D3}";
 
             return newTicketNumber;
         }

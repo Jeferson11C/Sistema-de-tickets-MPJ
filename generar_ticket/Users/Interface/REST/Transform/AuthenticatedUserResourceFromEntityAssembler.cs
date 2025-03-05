@@ -7,7 +7,7 @@ namespace generar_ticket.Users.Interface.REST.Transform
     {
         public static AuthenticatedUserResource ToResourceFromEntity(User entity, string token)
         {
-            return new AuthenticatedUserResource(entity.Id, entity.Username, entity.Password, token);
+            return new AuthenticatedUserResource(entity.Id, entity.Dni, entity.Password, token);
         }
     }
 }

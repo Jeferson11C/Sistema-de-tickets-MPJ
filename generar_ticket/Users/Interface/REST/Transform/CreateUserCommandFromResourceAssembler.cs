@@ -15,7 +15,7 @@ namespace generar_ticket.Users.Interface.REST.Transform
                 resource.Nombre,
                 resource.ApePaterno,
                 resource.ApeMaterno,
-                resource.Username,
+                resource.Ventanilla,
                 resource.Password,
                 resource.Rol,
                 resource.Area

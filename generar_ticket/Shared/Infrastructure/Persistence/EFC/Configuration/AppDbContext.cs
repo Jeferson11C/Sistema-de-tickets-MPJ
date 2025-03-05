@@ -58,7 +58,7 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
                 builder.Entity<User>().HasKey(u => u.Id);
                 entity.Property(u => u.Dni).IsRequired();
                 builder.Entity<User>().Property(u => u.Id).IsRequired().ValueGeneratedOnAdd();
-                builder.Entity<User>().Property(u => u.Username).IsRequired();
+                builder.Entity<User>().Property(u => u.Ventanilla).IsRequired();
                 builder.Entity<User>().Property(u => u.Password).IsRequired();
                 builder.Entity<User>().Property(u => u.Rol).IsRequired();
                 builder.Entity<User>().Property(u => u.Area).IsRequired();

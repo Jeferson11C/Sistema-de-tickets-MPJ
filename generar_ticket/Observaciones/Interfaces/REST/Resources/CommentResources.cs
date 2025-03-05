@@ -7,7 +7,7 @@ namespace generar_ticket.Observaciones.Interfaces.REST.Resources
         DateTime CreatedAt,
         string NumeroTicket,
         string Estado,
-        int UserId, // New property
-        string Username // New property
+        int UserId,
+        string NombreCompleto // Changed to string
     );
 }

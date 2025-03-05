@@ -6,7 +6,7 @@ public record CreateUserResource(
     string Nombre,
     string ApePaterno,
     string ApeMaterno,
-    string Username,
+    string Ventanilla,
     string Password,
     string Rol,
     string Area

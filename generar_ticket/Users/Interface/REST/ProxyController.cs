@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace generar_ticket.Users.Interface.REST
 {
@@ -25,26 +24,42 @@ namespace generar_ticket.Users.Interface.REST
         {
             try
             {
-                string dni = data.Codigo;
-                string apiUrl = "https://siga.munijlo.gob.pe/consultardocumento/api/dni";
+                string dni = data.Dni;
+                string metodo = dni.Length == 8 ? "RENIEC" : "CE"; // Detecta método automáticamente
 
-                var requestContent = new StringContent(JsonConvert.SerializeObject(new { codigo = dni }), Encoding.UTF8, "application/json");
+                string apiUrl = "http://173.17.0.2/api/v1/ws_pide"; // Nueva URL
 
-                var response = await _httpClient.PostAsync(apiUrl, requestContent);
+                using var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
+                request.Headers.Add("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjb3VudHJ5IjoiUGVyXHUwMGZhIiwiZGVwYXJ0bWVudCI6IkNhamFtYXJjYSIsInByb3ZpbmNlIjoiSmFcdTAwZTluIiwiZGlzdHJpY3QiOiJKYVx1MDBlOW4iLCJydWMiOjIwMjAxOTg3Mjk3LCJjb21wYW55IjoiTXVuaWNpcGFsaWRhZCBQcm92aW5jaWFsIGRlIEphXHUwMGU5biIsImVtYWlsIjoic2lzdGVtYXNAbXVuaWphZW4uZ29iLnBlIiwiZGV2ZWxvcGVyIjoiQmVybWVvIExvemFubyBIZXJsZXNzIERhbmR5IiwiY29udGFjdCI6Imhlcmxlc3NfYmVybWVvQGxpdmUuY29tIn0.aofOGiTG8z_zr12dX1hINIP5Nm1zFhJYhq0qnn0Xk-0"); // Token válido
+
+                // ✅ Enviar datos en form-data
+                var formData = new MultipartFormDataContent
+                {
+                    { new StringContent(metodo), "metodo" },
+                    { new StringContent(dni), "doc" },
+                    { new StringContent("0"), "iduser_app" }
+                };
+                request.Content = formData;
+
+                _logger.LogInformation("Enviando form-data: Método={Metodo}, DNI={Dni}", metodo, dni);
+
+                var response = await _httpClient.SendAsync(request);
                 var responseBody = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("Respuesta de la API: {ResponseBody}", responseBody);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Error response from external API: {StatusCode} - {ResponseBody}", response.StatusCode, responseBody);
+                    _logger.LogError("Error en la API: {StatusCode} - {ResponseBody}", response.StatusCode, responseBody);
                     return StatusCode((int)response.StatusCode, new { error = "Error en la solicitud al servidor externo", details = responseBody });
                 }
 
                 var result = JsonConvert.DeserializeObject<DniResponse>(responseBody);
 
-                // Extract the required fields from the response
-                var nombres = result?.Data?.Nombres ?? "No disponible";
-                var apePaterno = result?.Data?.Apellido_Paterno ?? "No disponible";
-                var apeMaterno = result?.Data?.Apellido_Materno ?? "No disponible";
+                // ✅ Extraer datos según la estructura correcta de la API
+                var nombres = result?.Nombres ?? "No disponible";
+                var apePaterno = result?.Paterno ?? "No disponible";
+                var apeMaterno = result?.Materno ?? "No disponible";
 
                 return Ok(new { nombres, apePaterno, apeMaterno });
             }
@@ -54,5 +69,19 @@ namespace generar_ticket.Users.Interface.REST
                 return StatusCode(500, new { error = "Error en la solicitud al servidor externo", details = ex.Message });
             }
         }
+    }
+
+    // ✅ Estructura correcta de la solicitud con "dni"
+    public class DniRequest
+    {
+        public string Dni { get; set; } // Ahora se envía "dni" desde el frontend
+    }
+
+    // ✅ Estructura correcta de la respuesta según la API
+    public class DniResponse
+    {
+        [JsonProperty("NOMBRES")] public string Nombres { get; set; }
+        [JsonProperty("PATERNO")] public string Paterno { get; set; }
+        [JsonProperty("MATERNO")] public string Materno { get; set; }
     }
 }

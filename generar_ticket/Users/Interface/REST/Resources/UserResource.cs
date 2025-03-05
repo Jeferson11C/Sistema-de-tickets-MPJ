@@ -4,7 +4,7 @@ public record UserResource(
     int Id,
     string Dni,
     string NombreCompleto,
-    string Username,
+    string Ventanilla,
     string Password,
     string Rol,
     string Area,

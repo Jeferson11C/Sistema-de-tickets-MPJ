@@ -6,7 +6,7 @@ namespace generar_ticket.Users.Domain.Model.Command
         string Nombre,
         string ApePaterno,
         string ApeMaterno,
-        string Username,
+        string Ventanilla,
         string Password,
         string Rol,
         string Area,

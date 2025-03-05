@@ -136,7 +136,7 @@ namespace generar_ticket.Users.Interface.REST
             var user = await _userRepository.GetUserByIdAsync(id);
             if (user == null) return NotFound();
 
-            var command = new UpdateUserCommand(id,  resource.Username, resource.Password, resource.Rol, resource.Area);
+            var command = new UpdateUserCommand(id,  resource.Ventanilla, resource.Password, resource.Rol, resource.Area);
             user.Update(command);
             await _userRepository.UpdateAsync(user);
             return NoContent();

@@ -14,7 +14,7 @@ namespace generar_ticket.Users.Interface.REST.Transform
                 entity.Id,
                 entity.Dni,
                 entity.NombreCompletoDisplay, // Use the display property for full name
-                entity.Username,
+                entity.Ventanilla,
                 entity.Password,
                 entity.Rol,
                 entity.Area,
