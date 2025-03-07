@@ -78,6 +78,12 @@ namespace generar_ticket.Users.Infrastructure.Persistence.EFC.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<User> GetUserByRefreshTokenAsync(string refreshToken)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        }
+        
         public async Task<User?> FindByIdAsync(int id)
         {
             return await _context.Users

@@ -6,7 +6,9 @@ namespace generar_ticket.Users.Application.Internal.OutboundServices
     {
         string GenerateToken(User user);
         Task<int?> ValidateToken(string token);
-        void InvalidateToken(string token); // Add this method
-        
+        void InvalidateToken(string token);
+        Task<int?> ValidateRefreshToken(string refreshToken);
+        string GenerateRefreshToken();
+        void StoreRefreshToken(string refreshToken, User user);
     }
 }

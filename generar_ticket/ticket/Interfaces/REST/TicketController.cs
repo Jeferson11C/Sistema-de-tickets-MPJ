@@ -142,5 +142,20 @@ namespace generar_ticket.ticket.Interfaces.REST
             var printers = PrinterService.GetInstalledPrinters();
             return Ok(printers);
         }
+        
+        [HttpGet("status/{status}")]
+        public async Task<ActionResult<IEnumerable<Ticket>>> GetTicketsByStatus(string status)
+        {
+            var query = new GetTicketsByStatusQuery(status); // Pass the status parameter to the constructor
+            var result = await _ticketQueryService.Handle(query);
+
+            if (result == null || !result.Any())
+            {
+                return NotFound(new { Message = "No tickets found with the specified status." });
+            }
+
+            return Ok(result);
+        }
+        
     }
 }

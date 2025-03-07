@@ -11,5 +11,6 @@ namespace generar_ticket.ticket.Domain.Services
         Task<object?> Handle(GetTicketByIdQuery query);
         Task<IEnumerable<Ticket>> Handle(GetTicketsByAreaQuery query);
         Task<bool> Handle(int id, UpdateTicketStatusCommand command); // Update this line
+        Task<IEnumerable<Ticket>> Handle(GetTicketsByStatusQuery query);
     }
 }

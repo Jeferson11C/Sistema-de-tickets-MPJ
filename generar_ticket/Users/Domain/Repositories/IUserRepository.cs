@@ -18,5 +18,7 @@ namespace generar_ticket.Users.Domain.Repositories
         Task UpdateAsync(User entity);
         Task DeleteAsync(User entity);
         Task SaveChangesAsync();
+        
+        Task<User> GetUserByRefreshTokenAsync(string refreshToken);
     }
 }

@@ -147,10 +147,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowedAllPolicy",
         policy => policy
-            .AllowAnyOrigin()
+            .SetIsOriginAllowed(_ => true) // Allow any origin dynamically
             .AllowAnyMethod()
-            .AllowAnyHeader());
+            .AllowAnyHeader()
+            .AllowCredentials()); // Allow credentials (cookies)
 });
+
 
 // Register Area transformation services
 builder.Services.AddScoped<AreaResourcesFromEntityAssembler>();
@@ -189,6 +191,12 @@ builder.Services.AddScoped<ICommentCommandService, CommentCommandService>();
 builder.Services.AddSingleton<PrinterService>();
 builder.Services.AddScoped<PrintService>();
 
+//refresh token
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+
+
+
 var app = builder.Build();
 
 // Habilitar WebSockets
@@ -200,6 +208,8 @@ app.UseWebSockets(webSocketOptions);
 
 // Usar el middleware de WebSocket
 app.UseMiddleware<WebSocketMiddleware>();
+
+
 
 // Verify Database Objects are Created
 try

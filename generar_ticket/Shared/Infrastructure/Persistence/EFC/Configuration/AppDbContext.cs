@@ -5,6 +5,7 @@ using generar_ticket.Users.Domain.Model.Aggregate;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using EntityFrameworkCore.CreatedUpdatedDate.Extensions;
 using generar_ticket.Observaciones.Domain.Model.Aggregates;
+using generar_ticket.Users.Domain.Model.Entity;
 using generar_ticket.Users.Domain.Model.ValueObject;
 
 namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
@@ -15,6 +16,7 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
         public DbSet<Ticket?> Tickets { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; } // Nueva propiedad
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -63,6 +65,7 @@ namespace generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration
                 builder.Entity<User>().Property(u => u.Rol).IsRequired();
                 builder.Entity<User>().Property(u => u.Area).IsRequired();
                 builder.Entity<User>().Property(u => u.Estado).IsRequired(); // Ensure Estado is required
+                builder.Entity<User>().Property(u => u.RefreshTokenExpiryTime).IsRequired(false); // Añadir esta línea
 
                 builder.Entity<User>().OwnsOne(u => u.NombreCompleto,
                     n =>

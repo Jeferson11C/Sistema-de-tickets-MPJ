@@ -12,9 +12,9 @@
         <!-- Dependency Injection related packages -->
         <PackageReference Include="itext7" Version="7.1.17" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
-       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.2.0" />
-       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-       <!-- Entity Framework Core Database Persistence related packages -->
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="1.2.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+        <!-- Entity Framework Core Database Persistence related packages -->
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.6" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational.Design" Version="1.1.6" />
@@ -36,7 +36,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.6.0" />
         <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
-        
+
         <!--proobando websockets asta que funcione -->
     </ItemGroup>
 
@@ -44,8 +44,8 @@
 
 
     <ItemGroup>
-      <Folder Include="Observaciones\Domain\Model\Entities\" />
-      <Folder Include="ticket\Domain\Model\ValueObjects\" />
+        <Folder Include="Observaciones\Domain\Model\Entities\" />
+        <Folder Include="ticket\Domain\Model\ValueObjects\" />
     </ItemGroup>
 
 </Project>

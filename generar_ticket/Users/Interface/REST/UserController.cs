@@ -61,7 +61,10 @@ namespace generar_ticket.Users.Interface.REST
             if (authenticatedUser.user == null) return Unauthorized();
 
             var token = _tokenService.GenerateToken(authenticatedUser.user);
-            var authenticatedUserResource = AuthenticatedUserResourceFromEntityAssembler.ToResourceFromEntity(authenticatedUser.user, token);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            _tokenService.StoreRefreshToken(refreshToken, authenticatedUser.user);
+
+            var authenticatedUserResource = AuthenticatedUserResourceFromEntityAssembler.ToResourceFromEntity(authenticatedUser.user, token, refreshToken);
             return Ok(authenticatedUserResource);
         }
         

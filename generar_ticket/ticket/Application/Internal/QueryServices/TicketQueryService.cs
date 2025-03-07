@@ -30,6 +30,8 @@ namespace generar_ticket.ticket.Application.Internal.QueryServices
         {
             return await _context.Tickets.Where(t => t.AreaNombre == query.AreaNombre).ToListAsync();
         }
+        
+        
 
         public async Task<bool> Handle(int id, UpdateTicketStatusCommand command) // Implement this method
         {
@@ -42,6 +44,12 @@ namespace generar_ticket.ticket.Application.Internal.QueryServices
             ticket.Estado = command.Estado;
             await _context.SaveChangesAsync();
             return true;
+        }
+        public async Task<IEnumerable<Ticket>> Handle(GetTicketsByStatusQuery query)
+        {
+            return await _context.Tickets
+                .Where(t => t.Estado == query.Status)
+                .ToListAsync();
         }
     }
 }

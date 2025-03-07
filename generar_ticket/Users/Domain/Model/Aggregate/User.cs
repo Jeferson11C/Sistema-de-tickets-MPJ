@@ -12,6 +12,8 @@ namespace generar_ticket.Users.Domain.Model.Aggregate
         public FullName NombreCompleto { get; private set; }
         public string Ventanilla { get; private set; }
         public string Password { get; private set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; } // Añadir esta propiedad
         public string Rol { get; private set; }
         public string Area { get; private set; }
         public string Estado { get; set; } // New field
