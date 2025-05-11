@@ -76,6 +76,26 @@ namespace generar_ticket.ticket.Domain.Services
                 return null;
             }
         }
+        
+        public async Task<bool> EsMenorDeEdad(string dni)
+        {
+            var persona = await GetPersonaData(dni);
+            if (persona == null)
+            {
+                throw new Exception("Persona no encontrada");
+            }
+
+            var edad = CalcularEdad(persona.FechaNacimiento);
+            return edad < 18;
+        }
+
+        private int CalcularEdad(DateTime fechaNacimiento)
+        {
+            var hoy = DateTime.Today;
+            var edad = hoy.Year - fechaNacimiento.Year;
+            if (fechaNacimiento.Date > hoy.AddYears(-edad)) edad--;
+            return edad;
+        }
 
         public class ApiResponse
         {
@@ -88,6 +108,7 @@ namespace generar_ticket.ticket.Domain.Services
             [JsonProperty("NOMBRES")] public string Nombres { get; set; }
             [JsonProperty("PATERNO")] public string ApePaterno { get; set; }
             [JsonProperty("MATERNO")] public string ApeMaterno { get; set; }
+            [JsonProperty("FECHA_NACIMIENTO")] public DateTime FechaNacimiento { get; set; }
         }
     }
 }

@@ -75,7 +75,7 @@ public class PrintService
             document.Close();
         }
        
-        /*
+
         // Print the PDF directly
         PrintPdf(pdfPath);
     }
@@ -96,7 +96,7 @@ public class PrintService
         {
             Console.WriteLine($"Error al imprimir el PDF: {ex.Message}");
         }
-        */
+
         
         
     }

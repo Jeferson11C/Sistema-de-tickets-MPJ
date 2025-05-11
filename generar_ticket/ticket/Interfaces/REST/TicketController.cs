@@ -40,6 +40,11 @@ namespace generar_ticket.ticket.Interfaces.REST
                     return NotFound(new { Message = "Persona data not found" });
                 }
 
+                if (await _personaService.EsMenorDeEdad(command.Documento))
+                {
+                    return BadRequest(new { Message = "DNI corresponde a un menor de edad" });
+                }
+
                 var ticket = new Ticket(command, _personaService, _context);
                 _context.Tickets.Add(ticket);
                 await _context.SaveChangesAsync();
@@ -77,7 +82,7 @@ namespace generar_ticket.ticket.Interfaces.REST
         }
 
        
-
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Ticket>> GetTicketById(int id)
         {
@@ -90,7 +95,7 @@ namespace generar_ticket.ticket.Interfaces.REST
             return Ok(result);
         }
 
-        
+        [Authorize]
         [HttpGet("area/{areaNombre}")]
         public async Task<ActionResult<IEnumerable<Ticket>>> GetTicketsByArea(string areaNombre)
         {
@@ -135,7 +140,7 @@ namespace generar_ticket.ticket.Interfaces.REST
             return NoContent();
         }
         
-
+        [Authorize]
         [HttpPost("installed")]
         public ActionResult<List<PrinterInfo>> GetInstalledPrinters()
         {

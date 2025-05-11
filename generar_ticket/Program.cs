@@ -36,6 +36,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 
 // Set the HTTPS port
+builder.WebHost.UseKestrel(options =>
+{
+    options.ListenAnyIP(5281); // Cambia al puerto correcto
+});
 
 // Add services to the container.
 builder.Services.AddControllers(options => options.Conventions.Add(new KebabCaseRouteNamingConvention()));
@@ -98,9 +102,9 @@ builder.Services.AddSwaggerGen(
         c.SwaggerDoc("v1",
             new OpenApiInfo
             {
-                Title = "Generar Ticket - MUNICIPALIDAD DE JAEN API",
+                Title = "Sistema de Tickets - MUNICIPALIDAD PROVINCIAL DE JAEN - API",
                 Version = "v1",
-                Description = "Generar Ticket API",
+                Description = "Sistema de Ticket API",
                 TermsOfService = new Uri("https://example.com/tos"),
                 Contact = new OpenApiContact
                 {
@@ -206,7 +210,7 @@ var webSocketOptions = new WebSocketOptions
 };
 app.UseWebSockets(webSocketOptions);
 
-// Usar el middleware de WebSocket
+// Use the WebSocket middleware
 app.UseMiddleware<WebSocketMiddleware>();
 
 

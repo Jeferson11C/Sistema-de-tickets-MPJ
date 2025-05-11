@@ -7,6 +7,7 @@ using generar_ticket.Observaciones.Interfaces.REST.Resources;
 using generar_ticket.Observaciones.Interfaces.REST.Transform;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
 using generar_ticket.ticket.Domain.Model.Aggregates;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace generar_ticket.Observaciones.Interfaces.REST
@@ -25,7 +26,7 @@ namespace generar_ticket.Observaciones.Interfaces.REST
             _commentResourceFromEntityAssembler = commentResourceFromEntityAssembler;
             _context = context;
         }
-
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<CommentResources>> AddComment([FromBody] CreatedCommentResource resource)
         {
@@ -44,6 +45,7 @@ namespace generar_ticket.Observaciones.Interfaces.REST
             return CreatedAtAction(nameof(AddComment), new { id = createdResource.Id }, createdResource);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<CommentResources>> GetCommentById(int id)
         {
@@ -58,6 +60,7 @@ namespace generar_ticket.Observaciones.Interfaces.REST
             return Ok(resource);
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CommentResources>>> GetAllComments()
         {
@@ -70,6 +73,7 @@ namespace generar_ticket.Observaciones.Interfaces.REST
             return Ok(resources);
         }
 
+        [Authorize]
         [HttpGet("ticket/{ticketId}")]
         public async Task<ActionResult<IEnumerable<CommentResources>>> GetCommentsByTicketId(int ticketId)
         {

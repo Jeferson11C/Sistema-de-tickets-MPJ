@@ -2,6 +2,7 @@ using generar_ticket.area.Domain.Model.Aggregates;
 using generar_ticket.area.Interfaces.REST.Resources;
 using generar_ticket.area.Interfaces.REST.Transform;
 using generar_ticket.Shared.Infrastructure.Persistence.EFC.Configuration;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace generar_ticket.area.Interfaces.REST
@@ -24,6 +25,7 @@ namespace generar_ticket.area.Interfaces.REST
             _createAreaAssembler = createAreaAssembler;
         }
         
+        [Authorize]
         [HttpPost]
         public ActionResult<AreaResources> CreateArea([FromBody] CreatedAreaResources resource)
         {
@@ -60,6 +62,7 @@ namespace generar_ticket.area.Interfaces.REST
             return Ok(resources);
         }
         
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult DeleteArea(int id)
         {

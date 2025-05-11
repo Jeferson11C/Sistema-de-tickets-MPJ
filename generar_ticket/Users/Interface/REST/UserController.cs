@@ -64,7 +64,12 @@ namespace generar_ticket.Users.Interface.REST
             var refreshToken = _tokenService.GenerateRefreshToken();
             _tokenService.StoreRefreshToken(refreshToken, authenticatedUser.user);
 
-            var authenticatedUserResource = AuthenticatedUserResourceFromEntityAssembler.ToResourceFromEntity(authenticatedUser.user, token, refreshToken);
+            var authenticatedUserResource = new AuthenticatedUserResource(
+                authenticatedUser.user.Id,
+                token,
+                refreshToken
+            );
+
             return Ok(authenticatedUserResource);
         }
         
@@ -145,7 +150,8 @@ namespace generar_ticket.Users.Interface.REST
             return NoContent();
         }
 
-
+ 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -156,7 +162,7 @@ namespace generar_ticket.Users.Interface.REST
             return NoContent();
         }
         
-
+        [Authorize]
         [HttpPut("{id}/estado")]
         public async Task<IActionResult> UpdateUserEstado(int id, [FromBody] UpdateUserEstadoResource resource)
         {
